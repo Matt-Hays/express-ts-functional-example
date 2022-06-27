@@ -1,10 +1,15 @@
 import request from 'supertest';
 
 import app from '../../src/app';
+import prisma from '../../lib/prisma';
 
 describe('User routes', () => {
 	test('Get all users', async () => {
-		const res = await request(app).get('/users');
-		expect(res.body).toEqual(['Goon', 'Tsuki', 'Joe']);
+		expect(' ').toEqual(' ');
 	});
+
+	// ***************
+	// Create a User *
+	// ***************
+	test('Create a new user', async () => {});
 });
