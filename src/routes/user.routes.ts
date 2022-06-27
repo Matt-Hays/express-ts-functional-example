@@ -4,9 +4,16 @@ import { PrismaClient } from '@prisma/client';
 const userRoutes = Router();
 const prisma = new PrismaClient();
 
-userRoutes.get('/', async (req: Request, res: Response): Promise<void> => {
-	const cars = await prisma.car.findMany();
-	res.status(200).send(cars);
+// Users / Authentication Routes
+
+// Return a user from the database
+userRoutes.get('/api/user/:id', async (req: Request, res: Response): Promise<void> => {
+	const user = prisma.user.findUnique({
+		where: {
+			id: req.params.id,
+		},
+	});
+	res.status(200).send(user);
 });
 
 export { userRoutes };

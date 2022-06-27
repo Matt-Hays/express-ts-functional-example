@@ -7,44 +7,118 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Car {
-  id      Int      @id @default(autoincrement())
-  make    String
-  model   Model    @default(CHEVROLET)
-  mileage Int
-  year    DateTime
+// **************
+// Invoice Type *
+// **************
+
+model Invoice {
+  id               String      @id @default(uuid())
+  createdAt        DateTime    @default(now())
+  reservation      Reservation @relation(fields: [reservationId], references: [id])
+  reservationId    String      @unique
+  damageFee        Decimal     @db.Decimal(6, 2)
+  fuelFee          Decimal     @db.Decimal(6, 2)
+  adminstrativeFee Decimal     @db.Decimal(6, 2)
+  standardRate     Decimal     @db.Decimal(6, 2)
+  subtotal         Decimal     @db.Decimal(7, 2)
+  taxRate          Decimal     @db.Decimal(6, 2)
+  total            Decimal     @db.Decimal(7, 2)
+  payment          Payment     @relation(fields: [paymentId], references: [id])
+  paymentId        String
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  title     String   @db.VarChar(255)
-  content   String?
-  published Boolean  @default(false)
-  authorId  Int
-  User      User     @relation(fields: [authorId], references: [id])
+model Payment {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  Invoice   Invoice[]
+  method    Method
+  complete  Boolean
 }
 
-model Profile {
-  id     Int     @id @default(autoincrement())
-  bio    String?
-  userId Int     @unique
-  User   User    @relation(fields: [userId], references: [id])
+enum Method {
+  CREDIT_CARD
+  CASH
+  CHECK
+  CORPORATE_ACCOUNT
 }
+
+// ******************
+// Reservation Type *
+// ******************
+
+model Reservation {
+  id        String    @id @default(uuid())
+  vehicle   Vehicle   @relation(fields: [vehicleId], references: [id])
+  vehicleId String    @unique
+  startDate DateTime  @default(now())
+  endDate   DateTime  @default(now())
+  policy    Policy?   @relation(fields: [policyId], references: [id])
+  policyId  String
+  Invoice   Invoice[]
+}
+
+model Policy {
+  id          String        @id @default(uuid())
+  provider    Provider      @default(FARMERS)
+  validStart  DateTime      @default(now())
+  validEnd    DateTime      @default(now())
+  Reservation Reservation[]
+}
+
+enum Provider {
+  PACIFIC_LIFE
+  ALLSTATE
+  FARMERS
+  USAA
+}
+
+// **************
+// Vehicle Type *
+// **************
+
+model Vehicle {
+  id          String        @id @default(uuid())
+  make        String
+  model       String
+  mileage     Int
+  year        DateTime
+  Reservation Reservation[]
+}
+
+// ***********
+// User Type *
+// ***********
 
 model User {
-  id      Int      @id @default(autoincrement())
+  id      String   @id @default(uuid())
   email   String   @unique
-  name    String?
-  Post    Post[]
+  type    Role     @default(GUEST)
   Profile Profile?
 }
 
-enum Model {
-  CHEVROLET
-  FORD
-  MERCEDES
-  TOYOTA
-  MITSUBISHI
+enum Role {
+  GUEST
+  CLERK
+  MANAGER
+  ADMIN
+}
+
+model Profile {
+  id        String  @id @default(uuid())
+  firstName String
+  lastName  String
+  address   Address @relation(fields: [addressId], references: [id])
+  addressId String
+  User      User    @relation(fields: [userId], references: [id])
+  userId    String  @unique
+}
+
+model Address {
+  id      String    @id @default(uuid())
+  line1   String
+  line2   String
+  city    String
+  state   String    @db.VarChar(2)
+  zip     String    @db.VarChar(10)
+  Profile Profile[]
 }
