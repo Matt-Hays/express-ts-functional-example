@@ -1,16 +1,17 @@
 import request from 'supertest';
 import app from '../../src/app';
 import prisma from '../../lib/prisma';
-// Test GET ALL VEHICLES route
-describe('Vehicle routes', () => {
-	// Get a reusable db client
 
+// *******************
+// Fleet Route Tests *
+// *******************
+describe('Fleet routes', () => {
 	// *******************
 	// Read ALL Vehicles *
 	// *******************
 	test('Get all vehicles', async () => {
 		// Send a GET all request through the application
-		const applicationResponse = await request(app).get('/api/vehicles');
+		const applicationResponse = await request(app).get('/api/fleet');
 
 		// Request all vehicle entries from the database.
 		const dbResponse = await prisma.vehicle.findMany();
@@ -25,10 +26,10 @@ describe('Vehicle routes', () => {
 	// ******************
 	test('Get a vehicle by id', async () => {
 		// Create a test case vehicle
-		const testVehcileId = '567ade16-155d-48db-9bb4-7b3be408baa9';
+		const testVehcileId = '1bf2c13d-ca11-4bb3-8a4b-83544807e004';
 
 		// Send a GET request through the application.
-		const applicationResponse = await request(app).get(`/api/vehicles/${testVehcileId}`);
+		const applicationResponse = await request(app).get(`/api/fleet/${testVehcileId}`);
 
 		// Obtain the database record matching the id predicate
 		const dbResponse = await prisma.vehicle.findUnique({
@@ -54,10 +55,7 @@ describe('Vehicle routes', () => {
 		};
 
 		// Send a POST request through the application.
-		const appResponse = await request(app)
-			.post('/api/vehicles')
-			.set('Content-Type', 'application/json')
-			.send(testVehicle);
+		const appResponse = await request(app).post('/api/fleet').set('Content-Type', 'application/json').send(testVehicle);
 
 		// Check for the new entry in the database
 		const dbResponse = await prisma.vehicle.findUnique({
@@ -79,14 +77,14 @@ describe('Vehicle routes', () => {
 	// ********************
 	test('Update a vehcile by id', async () => {
 		// Create a test case vehicle
-		const testVehicleId = '567ade16-155d-48db-9bb4-7b3be408baa9';
+		const testVehicleId = '1bf2c13d-ca11-4bb3-8a4b-83544807e004';
 
 		// The modification we will perform
 		const inputMileage = 65000;
 
 		// Send the PUT request through the application.
 		const appResponse = await request(app)
-			.put(`/api/vehicles/${testVehicleId}`)
+			.put(`/api/fleet/${testVehicleId}`)
 			.set('Content-Type', 'application/json')
 			.send({
 				mileage: inputMileage,
@@ -116,7 +114,7 @@ describe('Vehicle routes', () => {
 	// Delete One Vehicle *
 	// ********************
 	test('Delete a vehicle by id', async () => {
-		const vehicleId = 'ab8a241b-99e5-4740-95bf-c3803427f02d';
+		const vehicleId = '7e1e3561-fb84-4bdc-947b-6b629013c5fd';
 
 		// Database record before deletion
 		const dbResponseBefore = await prisma.vehicle.findUnique({
@@ -127,7 +125,7 @@ describe('Vehicle routes', () => {
 		const dbResponseBeforeJson = JSON.parse(JSON.stringify(dbResponseBefore));
 
 		// Send DEL request through the application.
-		const appResponse = await request(app).del(`/api/vehicles/${vehicleId}`);
+		const appResponse = await request(app).del(`/api/fleet/${vehicleId}`);
 
 		// Database record after deletion
 		const dbResponseAfter = await prisma.vehicle.findUnique({
