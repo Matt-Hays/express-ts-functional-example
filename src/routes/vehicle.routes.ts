@@ -1,8 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
+import prisma from '../../lib/prisma';
 const vehiclesRoutes = Router();
-const prisma = new PrismaClient();
 
 // ******************
 // Get All Vehicles *
