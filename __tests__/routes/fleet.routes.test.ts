@@ -27,7 +27,12 @@ describe('Fleet routes', () => {
 				id: appResponse.body.id,
 			},
 		});
-		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
+		// We need a custom stringify to handle bigint cases within prisma
+		const dbResponseJson = JSON.parse(
+			JSON.stringify(dbResponse, (key: string, value: any): any =>
+				typeof value == 'bigint' ? value.toString() : value
+			)
+		);
 
 		// Expect a valid response code
 		expect(appResponse.statusCode).toEqual(201);
@@ -57,7 +62,12 @@ describe('Fleet routes', () => {
 
 		// Request all vehicle entries from the database.
 		const dbResponse = await prisma.vehicle.findMany();
-		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
+		// We need a custom stringify to handle bigint cases within prisma
+		const dbResponseJson = JSON.parse(
+			JSON.stringify(dbResponse, (key: string, value: any): any =>
+				typeof value == 'bigint' ? value.toString() : value
+			)
+		);
 
 		// Expect a valid success status code
 		expect(appResponse.statusCode).toEqual(200);
@@ -81,7 +91,12 @@ describe('Fleet routes', () => {
 				id: vehicleId,
 			},
 		});
-		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
+		// We need a custom stringify to handle bigint cases within prisma
+		const dbResponseJson = JSON.parse(
+			JSON.stringify(dbResponse, (key: string, value: any): any =>
+				typeof value == 'bigint' ? value.toString() : value
+			)
+		);
 
 		// Expect valid success status code
 		expect(appResponse.statusCode).toEqual(200);
@@ -134,7 +149,12 @@ describe('Fleet routes', () => {
 				id: vehicleId,
 			},
 		});
-		const dbResponseBeforeJson = JSON.parse(JSON.stringify(dbResponseBefore));
+		// We need a custom stringify to handle bigint cases within prisma
+		const dbResponseBeforeJson = JSON.parse(
+			JSON.stringify(dbResponseBefore, (key: string, value: any): any =>
+				typeof value == 'bigint' ? value.toString() : value
+			)
+		);
 
 		// Send DELETE request through the application.
 		const appResponse = await request(app).del(`/api/fleet/${vehicleId}`);

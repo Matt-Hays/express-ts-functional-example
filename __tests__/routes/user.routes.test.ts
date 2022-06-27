@@ -76,7 +76,11 @@ describe('User routes', () => {
 				id: userId,
 			},
 		});
-		const dbResponseJson = JSON.parse(JSON.stringify(dbresponse));
+		const dbResponseJson = JSON.parse(
+			JSON.stringify(dbresponse, (key: string, value: any): any =>
+				typeof value == 'bigint' ? value.toString() : value
+			)
+		);
 
 		// Expect a valid success code
 		expect(appResponse.statusCode).toEqual(200);
@@ -103,7 +107,11 @@ describe('User routes', () => {
 				id: userId,
 			},
 		});
-		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
+		const dbResponseJson = JSON.parse(
+			JSON.stringify(dbResponse, (key: string, value: any): any =>
+				typeof value == 'bigint' ? value.toString() : value
+			)
+		);
 
 		// Expect a valid success status code
 		expect(appResponse.statusCode).toEqual(201);
@@ -122,7 +130,11 @@ describe('User routes', () => {
 				id: userId,
 			},
 		});
-		const dbResponseBeforeJson = JSON.parse(JSON.stringify(dbResponseBefore));
+		const dbResponseBeforeJson = JSON.parse(
+			JSON.stringify(dbResponseBefore, (key: string, value: any): any =>
+				typeof value == 'bigint' ? value.toString() : value
+			)
+		);
 
 		// Send the DELETE request through the application
 		const appResponse = await request(app).del(`/api/user/${userId}`);
