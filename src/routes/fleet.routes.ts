@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../../lib/prisma';
-const vehiclesRoutes = Router();
+const fleetRoute = Router();
 
 // ******************
 // Get All Vehicles *
 // ******************
-vehiclesRoutes.get('/', async (req: Request, res: Response): Promise<void> => {
+fleetRoute.get('/', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const cars = await prisma.vehicle.findMany();
 
@@ -18,7 +18,7 @@ vehiclesRoutes.get('/', async (req: Request, res: Response): Promise<void> => {
 // **********************
 // Create a New Vehicle *
 // **********************
-vehiclesRoutes.post('/', async (req: Request, res: Response): Promise<void> => {
+fleetRoute.post('/', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const newVehicle = await prisma.vehicle.create({
 			data: {
@@ -35,7 +35,7 @@ vehiclesRoutes.post('/', async (req: Request, res: Response): Promise<void> => {
 // *********************
 // Get a Vehicle by Id *
 // *********************
-vehiclesRoutes.get('/:id', async (req: Request, res: Response): Promise<void> => {
+fleetRoute.get('/:id', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const vehicle = await prisma.vehicle.findUnique({
 			where: {
@@ -52,7 +52,7 @@ vehiclesRoutes.get('/:id', async (req: Request, res: Response): Promise<void> =>
 // ******************
 // Modify a Vehicle *
 // ******************
-vehiclesRoutes.put('/:id', async (req: Request, res: Response): Promise<void> => {
+fleetRoute.put('/:id', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const vehicle = await prisma.vehicle.update({
 			data: {
@@ -72,7 +72,7 @@ vehiclesRoutes.put('/:id', async (req: Request, res: Response): Promise<void> =>
 // ******************
 // Delete a Vehicle *
 // ******************
-vehiclesRoutes.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+fleetRoute.delete('/:id', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const deletedVehicle = await prisma.vehicle.delete({
 			where: {
@@ -86,4 +86,4 @@ vehiclesRoutes.delete('/:id', async (req: Request, res: Response): Promise<void>
 	}
 });
 
-export { vehiclesRoutes };
+export { fleetRoute };

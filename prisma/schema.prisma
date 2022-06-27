@@ -90,10 +90,11 @@ model Vehicle {
 // ***********
 
 model User {
-  id      String   @id @default(uuid())
-  email   String   @unique
-  type    Role     @default(GUEST)
-  Profile Profile?
+  id       String   @id @default(uuid())
+  email    String   @unique
+  password String
+  type     Role     @default(GUEST)
+  Profile  Profile?
 }
 
 enum Role {
