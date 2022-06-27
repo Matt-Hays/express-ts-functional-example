@@ -1,13 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
-const userRoutes = Router();
+const userRoute = Router();
 const prisma = new PrismaClient();
 
 // ***************
 // POST new User *
 // ***************
-userRoutes.post('/', async (req: Request, res: Response): Promise<void> => {
+userRoute.post('/', async (req: Request, res: Response): Promise<void> => {
 	try {
 		// Create the new user
 		const newUser = await prisma.user.create({
@@ -28,7 +28,7 @@ userRoutes.post('/', async (req: Request, res: Response): Promise<void> => {
 // GET all Users *
 // ***************
 
-userRoutes.get('/', async (req: Request, res: Response): Promise<void> => {
+userRoute.get('/', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const allUsers = await prisma.user.findMany();
 
@@ -41,7 +41,7 @@ userRoutes.get('/', async (req: Request, res: Response): Promise<void> => {
 // **************
 // GET one User *
 // **************
-userRoutes.get('/:id', async (req: Request, res: Response): Promise<void> => {
+userRoute.get('/:id', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const user = await prisma.user.findUnique({
 			where: {
@@ -58,7 +58,7 @@ userRoutes.get('/:id', async (req: Request, res: Response): Promise<void> => {
 // *****************
 // UPDATE one User *
 // *****************
-userRoutes.put('/:id', async (req: Request, res: Response): Promise<void> => {
+userRoute.put('/:id', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const updatedUser = await prisma.user.update({
 			data: {
@@ -78,7 +78,7 @@ userRoutes.put('/:id', async (req: Request, res: Response): Promise<void> => {
 // ***************
 // DELETE a User *
 // ***************
-userRoutes.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+userRoute.delete('/:id', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const deletedUser = await prisma.user.delete({
 			where: {
@@ -92,4 +92,4 @@ userRoutes.delete('/:id', async (req: Request, res: Response): Promise<void> => 
 	}
 });
 
-export { userRoutes };
+export { userRoute };
