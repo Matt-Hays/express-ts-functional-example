@@ -6,45 +6,9 @@ import prisma from '../../lib/prisma';
 // Fleet Route Tests *
 // *******************
 describe('Fleet routes', () => {
-	// *******************
-	// Read ALL Vehicles *
-	// *******************
-	test('Get all vehicles', async () => {
-		// Send a GET all request through the application
-		const applicationResponse = await request(app).get('/api/fleet');
-
-		// Request all vehicle entries from the database.
-		const dbResponse = await prisma.vehicle.findMany();
-		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
-
-		// Expect that the response from the application is the same as the response from the database
-		expect(applicationResponse.body).toEqual(dbResponseJson);
-	});
-
-	// ******************
-	// Read One Vehicle *
-	// ******************
-	test('Get a vehicle by id', async () => {
-		// Create a test case vehicle
-		const testVehcileId = '1bf2c13d-ca11-4bb3-8a4b-83544807e004';
-
-		// Send a GET request through the application.
-		const applicationResponse = await request(app).get(`/api/fleet/${testVehcileId}`);
-
-		// Obtain the database record matching the id predicate
-		const dbResponse = await prisma.vehicle.findUnique({
-			where: {
-				id: testVehcileId,
-			},
-		});
-		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
-
-		// Expect the response from the application matches the response from the database.
-		expect(applicationResponse.body).toEqual(dbResponseJson);
-	});
-
+	const vehicleId = '8ded03dd-9e66-4c9b-9586-a729902ec24e';
 	// ********************
-	// Create One Vehicle *
+	// Create new Vehicle *
 	// ********************
 	test('Create a new vehicle', async () => {
 		const testVehicle = {
@@ -68,7 +32,61 @@ describe('Fleet routes', () => {
 		// Expect a valid response code
 		expect(appResponse.statusCode).toEqual(201);
 
-		// Expect that the application and the database respond with the same data
+		// Expect the app and original data to agree
+		expect(appResponse.body.make).toEqual(testVehicle.make);
+		expect(appResponse.body.model).toEqual(testVehicle.model);
+		expect(appResponse.body.mileage).toEqual(testVehicle.mileage);
+		expect(appResponse.body.year).toEqual(testVehicle.year.toJSON());
+
+		// Expect the db and original data to agree
+		expect(dbResponse?.make).toEqual(testVehicle.make);
+		expect(dbResponse?.model).toEqual(testVehicle.model);
+		expect(dbResponse?.mileage).toEqual(testVehicle.mileage);
+		expect(dbResponse?.year).toEqual(testVehicle.year);
+
+		// Expect that the application and the database to agree
+		expect(appResponse.body).toEqual(dbResponseJson);
+	});
+
+	// *******************
+	// Read all Vehicles *
+	// *******************
+	test('Get all vehicles', async () => {
+		// Send a GET request through the application
+		const appResponse = await request(app).get('/api/fleet');
+
+		// Request all vehicle entries from the database.
+		const dbResponse = await prisma.vehicle.findMany();
+		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
+
+		// Expect a valid success status code
+		expect(appResponse.statusCode).toEqual(200);
+
+		// Expect the application and database agree
+		expect(appResponse.body).toEqual(dbResponseJson);
+	});
+
+	// ******************
+	// Read One Vehicle *
+	// ******************
+	test('Get a vehicle by id', async () => {
+		// Test case vehicle
+
+		// Send a GET request through the application.
+		const appResponse = await request(app).get(`/api/fleet/${vehicleId}`);
+
+		// Get the database record for the tested vehicle
+		const dbResponse = await prisma.vehicle.findUnique({
+			where: {
+				id: vehicleId,
+			},
+		});
+		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
+
+		// Expect valid success status code
+		expect(appResponse.statusCode).toEqual(200);
+
+		// Expect the db and app agree
 		expect(appResponse.body).toEqual(dbResponseJson);
 	});
 
@@ -76,29 +94,25 @@ describe('Fleet routes', () => {
 	// Update One Vehicle *
 	// ********************
 	test('Update a vehcile by id', async () => {
-		// Create a test case vehicle
-		const testVehicleId = '1bf2c13d-ca11-4bb3-8a4b-83544807e004';
+		// Test case vehicle
 
-		// The modification we will perform
+		// The modification
 		const inputMileage = 65000;
 
 		// Send the PUT request through the application.
-		const appResponse = await request(app)
-			.put(`/api/fleet/${testVehicleId}`)
-			.set('Content-Type', 'application/json')
-			.send({
-				mileage: inputMileage,
-			});
+		const appResponse = await request(app).put(`/api/fleet/${vehicleId}`).set('Content-Type', 'application/json').send({
+			mileage: inputMileage,
+		});
 
 		// Check the database for the record.
 		const dbResponse = await prisma.vehicle.findUnique({
 			where: {
-				id: testVehicleId,
+				id: vehicleId,
 			},
 		});
 
 		// Expect a successful status code.
-		expect(appResponse.statusCode).toEqual(201);
+		expect(appResponse.statusCode).toEqual(200);
 
 		// Expect that the database and application agree on the modification.
 		expect(appResponse.body.mileage).toEqual(dbResponse?.mileage);
@@ -114,9 +128,7 @@ describe('Fleet routes', () => {
 	// Delete One Vehicle *
 	// ********************
 	test('Delete a vehicle by id', async () => {
-		const vehicleId = '7e1e3561-fb84-4bdc-947b-6b629013c5fd';
-
-		// Database record before deletion
+		// Get a copy of the db record before deletion
 		const dbResponseBefore = await prisma.vehicle.findUnique({
 			where: {
 				id: vehicleId,
@@ -124,10 +136,10 @@ describe('Fleet routes', () => {
 		});
 		const dbResponseBeforeJson = JSON.parse(JSON.stringify(dbResponseBefore));
 
-		// Send DEL request through the application.
+		// Send DELETE request through the application.
 		const appResponse = await request(app).del(`/api/fleet/${vehicleId}`);
 
-		// Database record after deletion
+		// Get the db record after deletetion
 		const dbResponseAfter = await prisma.vehicle.findUnique({
 			where: {
 				id: vehicleId,
@@ -137,10 +149,10 @@ describe('Fleet routes', () => {
 		// Expect that a valid success code has been received
 		expect(appResponse.statusCode).toEqual(200);
 
-		// Expect that the application response matches the database record from before the deletion.
+		// Expect the app and pre-deletion db records agree
 		expect(appResponse.body).toEqual(dbResponseBeforeJson);
 
-		// Expect that the dbResponse after deletion is an empty record.
+		// Expect the db record is empty after deletion
 		expect(dbResponseAfter).toEqual(null);
 	});
 });

@@ -4,16 +4,14 @@ import app from '../../src/app';
 import prisma from '../../lib/prisma';
 
 describe('User routes', () => {
-	test('Get all users', async () => {
-		expect(' ').toEqual(' ');
-	});
+	const userId = 'f9830b33-eab5-4b47-9be1-012c98d6028e';
 
 	// ***************
 	// Create a User *
 	// ***************
 	test('Create a new user', async () => {
 		const testUser = {
-			email: 'test5@test.com',
+			email: 'test7@test.com',
 			password: 'plaintexttest',
 			type: 'GUEST',
 		};
@@ -69,8 +67,6 @@ describe('User routes', () => {
 	// Read One User *
 	// ***************
 	test('Read a user by id', async () => {
-		const userId = '61716993-c672-4468-8993-b2cdc76a3605';
-
 		// Get application response
 		const appResponse = await request(app).get(`/api/user/${userId}`);
 
@@ -93,7 +89,6 @@ describe('User routes', () => {
 	// Update a User *
 	// ***************
 	test('Update user by id', async () => {
-		const userId = '61716993-c672-4468-8993-b2cdc76a3605';
 		const modifiedPw = 'newplaintexttestpassword';
 
 		// Send the PUT request through the application
@@ -121,8 +116,6 @@ describe('User routes', () => {
 	// DELETE a User *
 	// ***************
 	test('Delete user by id', async () => {
-		const userId = '61716993-c672-4468-8993-b2cdc76a3605';
-
 		// Get the db record before deletion
 		const dbResponseBefore = await prisma.user.findUnique({
 			where: {

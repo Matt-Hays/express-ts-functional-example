@@ -3,7 +3,27 @@ import prisma from '../../lib/prisma';
 const fleetRoute = Router();
 
 // ******************
-// Get All Vehicles *
+// POST new Vehicle *
+// ******************
+fleetRoute.post('/', async (req: Request, res: Response): Promise<void> => {
+	try {
+		const newVehicle = await prisma.vehicle.create({
+			data: {
+				make: req.body.make,
+				model: req.body.model,
+				mileage: req.body.mileage,
+				year: req.body.year,
+			},
+		});
+
+		res.status(201).json(newVehicle);
+	} catch (error) {
+		res.status(500).send({ message: error });
+	}
+});
+
+// ******************
+// Get all Vehicles *
 // ******************
 fleetRoute.get('/', async (req: Request, res: Response): Promise<void> => {
 	try {
@@ -15,26 +35,9 @@ fleetRoute.get('/', async (req: Request, res: Response): Promise<void> => {
 	}
 });
 
-// **********************
-// Create a New Vehicle *
-// **********************
-fleetRoute.post('/', async (req: Request, res: Response): Promise<void> => {
-	try {
-		const newVehicle = await prisma.vehicle.create({
-			data: {
-				...req.body,
-			},
-		});
-
-		res.status(201).json(newVehicle);
-	} catch (error) {
-		res.status(500).send({ message: error });
-	}
-});
-
-// *********************
-// Get a Vehicle by Id *
-// *********************
+// *****************
+// Get one Vehicle *
+// *****************
 fleetRoute.get('/:id', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const vehicle = await prisma.vehicle.findUnique({
@@ -49,21 +52,24 @@ fleetRoute.get('/:id', async (req: Request, res: Response): Promise<void> => {
 	}
 });
 
-// ******************
-// Modify a Vehicle *
-// ******************
+// ********************
+// UPDATE one Vehicle *
+// ********************
 fleetRoute.put('/:id', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const vehicle = await prisma.vehicle.update({
 			data: {
-				mileage: req.body.mileage,
+				make: req.body.make ? req.body.make : undefined,
+				model: req.body.model ? req.body.model : undefined,
+				mileage: req.body.mileage ? req.body.mileage : undefined,
+				year: req.body.year ? req.body.year : undefined,
 			},
 			where: {
 				id: req.params.id,
 			},
 		});
 
-		res.status(201).json(vehicle);
+		res.status(200).json(vehicle);
 	} catch (error) {
 		res.status(500).send({ message: error });
 	}

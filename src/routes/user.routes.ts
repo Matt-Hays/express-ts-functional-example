@@ -62,7 +62,9 @@ userRoute.put('/:id', async (req: Request, res: Response): Promise<void> => {
 	try {
 		const updatedUser = await prisma.user.update({
 			data: {
-				password: req.body.password,
+				email: req.body.email != null ? req.body.email : undefined,
+				password: req.body.password != null ? req.body.password : undefined,
+				type: req.body.type != null ? req.body.type : undefined,
 			},
 			where: {
 				id: req.params.id,
