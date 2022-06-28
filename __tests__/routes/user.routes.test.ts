@@ -148,36 +148,5 @@ describe('User routes', () => {
 	// ***************
 	// DELETE a User *
 	// ***************
-	// test('Delete user by id', async () => {
-	// 	// Get the db record before deletion
-	// 	const dbResponseBefore = await prisma.user.findUnique({
-	// 		where: {
-	// 			id: userId,
-	// 		},
-	// 	});
-	// 	const dbResponseBeforeJson = JSON.parse(
-	// 		JSON.stringify(dbResponseBefore, (key: string, value: any): any =>
-	// 			typeof value == 'bigint' ? value.toString() : value
-	// 		)
-	// 	);
-
-	// 	// Send the DELETE request through the application
-	// 	const appResponse = await request(app).del(`/api/user/${userId}`);
-
-	// 	// Get the db record after the deletion
-	// 	const dbResponseAfter = await prisma.user.findUnique({
-	// 		where: {
-	// 			id: userId,
-	// 		},
-	// 	});
-
-	// 	// Expect valid success code
-	// 	expect(appResponse.statusCode).toEqual(200);
-
-	// 	// Expect app response to equal database before deletion
-	// 	expect(appResponse.body).toEqual(dbResponseBeforeJson);
-
-	// 	// Expect db after deletion to contain no record
-	// 	expect(dbResponseAfter).toEqual(null);
-	// });
+	// Not implemented
 });
