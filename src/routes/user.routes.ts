@@ -11,9 +11,23 @@ userRoute.post('/', async (req: Request, res: Response): Promise<void> => {
 		// Create the new user
 		const newUser = await prisma.user.create({
 			data: {
-				email: req.body.email,
-				password: req.body.password,
-				type: req.body.type,
+				email: req.body.email != null ? req.body.email : undefined,
+				password: req.body.password != null ? req.body.password : undefined,
+				type: req.body.type != null ? req.body.type : undefined,
+				profile: {
+					create: {
+						firstName: req.body.profile.firstName != null ? req.body.profile.firstName : undefined,
+						lastName: req.body.profile.lastName != null ? req.body.profile.lastName : undefined,
+						addressLine1: req.body.profile.addressLine1 != null ? req.body.profile.addressLine1 : undefined,
+						addressLine2: req.body.profile.addressLine2 != null ? req.body.profile.addressLine2 : undefined,
+						city: req.body.profile.city != null ? req.body.profile.city : undefined,
+						state: req.body.profile.state != null ? req.body.profile.state : undefined,
+						zip: req.body.profile.zip != null ? req.body.profile.zip : undefined,
+					},
+				},
+			},
+			include: {
+				profile: true,
 			},
 		});
 
@@ -64,14 +78,29 @@ userRoute.put('/:id', async (req: Request, res: Response): Promise<void> => {
 				email: req.body.email != null ? req.body.email : undefined,
 				password: req.body.password != null ? req.body.password : undefined,
 				type: req.body.type != null ? req.body.type : undefined,
+				profile: {
+					update: {
+						firstName: req.body.profile?.firstName != null ? req.body.profile.firstName : undefined,
+						lastName: req.body.profile?.lastName != null ? req.body.profile.lastName : undefined,
+						addressLine1: req.body.profile?.addressLine1 != null ? req.body.profile.addressLine1 : undefined,
+						addressLine2: req.body.profile?.addressLine2 != null ? req.body.profile.addressLine2 : undefined,
+						city: req.body.profile?.city != null ? req.body.profile.city : undefined,
+						state: req.body.profile?.state != null ? req.body.profile.state : undefined,
+						zip: req.body.profile?.zip != null ? req.body.profile.zip : undefined,
+					},
+				},
 			},
 			where: {
 				id: req.params.id,
+			},
+			include: {
+				profile: true,
 			},
 		});
 
 		res.status(201).json(updatedUser);
 	} catch (error) {
+		console.log(error);
 		res.status(500).send({ message: error });
 	}
 });
@@ -79,18 +108,6 @@ userRoute.put('/:id', async (req: Request, res: Response): Promise<void> => {
 // ***************
 // DELETE a User *
 // ***************
-userRoute.delete('/:id', async (req: Request, res: Response): Promise<void> => {
-	try {
-		const deletedUser = await prisma.user.delete({
-			where: {
-				id: req.params.id,
-			},
-		});
-
-		res.status(200).json(deletedUser);
-	} catch (error) {
-		res.status(500).send({ message: error });
-	}
-});
+// Don't allow deletion of a user
 
 export { userRoute };
