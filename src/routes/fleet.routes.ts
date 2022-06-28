@@ -109,7 +109,6 @@ fleetRoute.delete('/:id', async (req: Request, res: Response): Promise<void> => 
 
 		res.status(200).json(inactivatedVehicle);
 	} catch (error) {
-		console.log(error);
 		res.status(500).send({ message: error });
 	}
 });

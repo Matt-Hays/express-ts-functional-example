@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { User } from '@prisma/client';
 
 import app from '../../src/app';
 import prisma from '../../lib/prisma';
@@ -19,8 +20,8 @@ describe('User routes', () => {
 		const testUser = {
 			email: `test${randNum}@test.com`,
 			password: 'plaintexttest',
-			type: 'CUSTOMER',
-			profile: {
+			account: {
+				type: 'CUSTOMER',
 				firstName: 'Sam',
 				lastName: 'OneEye',
 				addressLine1: '245 secondary ave',
@@ -40,7 +41,7 @@ describe('User routes', () => {
 				email: testUser.email,
 			},
 			include: {
-				profile: true,
+				account: true,
 			},
 		});
 		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
@@ -51,12 +52,12 @@ describe('User routes', () => {
 		// Expect the app response to equal the original data
 		expect(appResponse.body.email).toEqual(testUser.email);
 		expect(appResponse.body.password).toEqual(testUser.password);
-		expect(appResponse.body.type).toEqual(testUser.type);
+		expect(appResponse.body.account.type).toEqual(testUser.account.type);
 
 		// Expect the db response to equal the original data
 		expect(dbResponseJson.email).toEqual(testUser.email);
 		expect(dbResponseJson.password).toEqual(testUser.password);
-		expect(dbResponseJson.type).toEqual(testUser.type);
+		expect(dbResponseJson.account.type).toEqual(testUser.account.type);
 
 		// Expect the response from the app to match the response from the db
 		expect(appResponse.body).toEqual(dbResponseJson);
@@ -65,18 +66,23 @@ describe('User routes', () => {
 	// ****************
 	// Read All Users *
 	// ****************
+	type Partial<User> = {
+		[password in keyof User]?: User[password];
+	};
 	test('Read all users', async () => {
 		// Get the response from the app
 		const appResponse = await request(app).get('/api/user');
 
 		// Get the response from the database
-		const dbResponse = await prisma.user.findMany();
+		const dbResponse: Partial<User>[] = await prisma.user.findMany();
+		dbResponse.forEach((user) => delete user.password);
 		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
 
 		// Expect a valid success code
 		expect(appResponse.statusCode).toEqual(200);
 
 		// Expect the result from the application matches the result from the database.
+		// Expect the passwords to be removed from the response
 		expect(appResponse.body).toEqual(dbResponseJson);
 	});
 
@@ -123,7 +129,7 @@ describe('User routes', () => {
 				id: userId,
 			},
 			include: {
-				profile: true,
+				account: true,
 			},
 		});
 		const dbResponseJson = JSON.parse(

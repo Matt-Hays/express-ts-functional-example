@@ -10,8 +10,25 @@ datasource db {
 // ***********
 // User Type *
 // ***********
-model Profile {
+model User {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+
+  // Relations
+  account   Account @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  accountId String  @unique
+}
+
+// *************************
+// Account Type            *
+// User History Permanence *
+// (No Delete /            *
+// Allows User Deletion)   *
+// *************************
+model Account {
   id           String  @id @default(uuid())
+  type         Role    @default(CUSTOMER)
   firstName    String
   lastName     String
   addressLine1 String
@@ -19,16 +36,9 @@ model Profile {
   city         String
   state        String  @db.VarChar(2)
   zip          String  @db.VarChar(10)
-  user         User    @relation(fields: [userId], references: [id])
-  userId       String  @unique
-}
 
-model User {
-  id          String        @id @default(uuid())
-  email       String        @unique
-  password    String
-  type        Role          @default(CUSTOMER)
-  profile     Profile?
+  // Relations
+  user        User?
   reservation Reservation[]
 }
 
@@ -44,14 +54,16 @@ enum Role {
 // ******************
 
 model Reservation {
-  id          String     @id @default(uuid())
-  startDate   DateTime   @default(now())
-  endDate     DateTime   @default(now())
-  user        User       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId      String
+  id        String   @id @default(uuid())
+  startDate DateTime @default(now())
+  endDate   DateTime @default(now())
+
+  // Relations
+  account     Account    @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  accountId   String
   vehicle     Vehicle    @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
   vehicleId   String
-  insurance   Insurance? @relation(fields: [insuranceId], references: [id])
+  insurance   Insurance? @relation(fields: [insuranceId], references: [id], onDelete: Cascade)
   insuranceId String?    @unique
   invoice     Invoice?   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   invoiceId   String?    @unique
@@ -62,12 +74,14 @@ model Reservation {
 // **************
 
 model Vehicle {
-  id           String        @id @default(uuid())
-  make         String
-  model        String
-  mileage      Int
-  year         DateTime
-  active       Boolean       @default(true)
+  id      String   @id @default(uuid())
+  make    String
+  model   String
+  mileage Int
+  year    DateTime
+  active  Boolean  @default(true)
+
+  // Relations
   reservations Reservation[]
   transfer     Transfer?
 }
@@ -78,8 +92,10 @@ model Transfer {
   beneficiary String
   createdOn   DateTime          @default(now())
   modifiedOn  DateTime          @updatedAt
-  vehicle     Vehicle           @relation(fields: [vehicleId], references: [id])
-  vehicleId   String            @unique
+
+  // Relations
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  vehicleId String  @unique
 }
 
 enum TransferCategory {
@@ -92,11 +108,13 @@ enum TransferCategory {
 // Insurance Policy Type *
 // ***********************
 model Insurance {
-  id          String       @id @default(uuid())
-  provider    Provider?
-  selected    Boolean      @default(false)
-  validStart  DateTime?
-  validEnd    DateTime?
+  id         String    @id @default(uuid())
+  provider   Provider?
+  selected   Boolean   @default(false)
+  validStart DateTime?
+  validEnd   DateTime?
+
+  // Relations
   reservation Reservation?
 }
 
@@ -117,17 +135,19 @@ enum Provider {
 // **************
 
 model Invoice {
-  id                String       @id @default(uuid())
-  createdAt         DateTime     @default(now())
-  damageFee         Decimal?     @db.Decimal(6, 2)
-  fuelFee           Decimal?     @db.Decimal(6, 2)
-  administrativeFee Decimal?     @db.Decimal(6, 2)
-  standardRate      Decimal?     @db.Decimal(6, 2)
-  subtotal          Decimal?     @db.Decimal(7, 2)
-  taxRate           Decimal?     @db.Decimal(6, 2)
-  total             Decimal?     @db.Decimal(7, 2)
-  reservation       Reservation?
-  payment           Payment?
+  id                String   @id @default(uuid())
+  createdAt         DateTime @default(now())
+  damageFee         Decimal? @db.Decimal(6, 2)
+  fuelFee           Decimal? @db.Decimal(6, 2)
+  administrativeFee Decimal? @db.Decimal(6, 2)
+  standardRate      Decimal? @db.Decimal(6, 2)
+  subtotal          Decimal? @db.Decimal(7, 2)
+  taxRate           Decimal? @db.Decimal(6, 2)
+  total             Decimal? @db.Decimal(7, 2)
+
+  // Relations
+  reservation Reservation?
+  payment     Payment?
 }
 
 // **************
@@ -138,8 +158,10 @@ model Payment {
   createdAt DateTime @default(now())
   method    Method
   complete  Boolean
-  invoice   Invoice  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  paymentId String   @unique
+
+  // Relations
+  invoice   Invoice @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  paymentId String  @unique
 }
 
 enum Method {

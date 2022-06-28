@@ -3,7 +3,6 @@ import request from 'supertest';
 import app from '../../src/app';
 import prisma from '../../lib/prisma';
 import { Reservation } from '@prisma/client';
-import { JsonableValue } from 'ts-jest';
 
 describe('Reservation routes', () => {
 	// **********************
@@ -14,14 +13,14 @@ describe('Reservation routes', () => {
 		const testReservation = {
 			startDate: new Date(2022, 6, 22),
 			endDate: new Date(2022, 6, 29),
-			user: {
-				id: '2276812c-f86f-4eb2-9c88-74eb0141f504',
+			account: {
+				id: 'fbff890e-fefc-4cc2-b0e2-d6afffa78c1f',
 			},
 			invoice: {
 				standardRate: 34.99,
 			},
 			vehicle: {
-				id: '134d9b03-38a2-415d-a5a9-9b15c86e9386',
+				id: '31891b0d-070d-49d5-bc30-aa27c15efcb0',
 			},
 		};
 
@@ -41,7 +40,7 @@ describe('Reservation routes', () => {
 			include: {
 				insurance: true,
 				invoice: true,
-				user: true,
+				account: true,
 				vehicle: true,
 			},
 		});
@@ -94,7 +93,6 @@ describe('Reservation routes', () => {
 	test('GET reservation by id', async () => {
 		const randReservation: Reservation | null = await prisma.reservation.findFirst();
 		const testReservationId = randReservation?.id;
-		// Get a random userId
 
 		// Send GET request through the app
 		const appResponse = await request(app).get(`/api/reservation/${testReservationId}`);
@@ -143,7 +141,7 @@ describe('Reservation routes', () => {
 			include: {
 				insurance: true,
 				invoice: true,
-				user: true,
+				account: true,
 				vehicle: true,
 			},
 		});
@@ -167,38 +165,19 @@ describe('Reservation routes', () => {
 	// **********************
 	test('DELETE a reservation', async () => {
 		const randReservation: Reservation | null = await prisma.reservation.findFirst();
-		const testReservationId = randReservation!.id;
+		const testReservationId = randReservation?.id;
 		// Get reservation before deletion
 		const dbBefore = await prisma.reservation.findUnique({
 			where: {
-				id: testReservationId,
+				id: testReservationId!,
 			},
 		});
 		const dbBeforeJson = JSON.parse(
 			JSON.stringify(dbBefore, (key: string, value: any): any => (typeof value === 'bigint' ? value.toString() : value))
 		);
 		const vehicleId = dbBeforeJson.vehicleId;
-		const userId = dbBeforeJson.userId;
+		const accountId = dbBeforeJson.accountId;
 		const invoiceId = dbBeforeJson.invoiceId;
-
-		// Ensure no changes are made to remaining objects
-		const dbUserBefore = await prisma.user.findUnique({
-			where: {
-				id: userId,
-			},
-			include: {
-				profile: true,
-			},
-		});
-
-		const dbVehicleBefore = await prisma.vehicle.findUnique({
-			where: {
-				id: vehicleId,
-			},
-			include: {
-				transfer: true,
-			},
-		});
 
 		// Send DELETE request through the app
 		const appResponse = await request(app).del(`/api/reservation/${testReservationId}`);
@@ -229,12 +208,12 @@ describe('Reservation routes', () => {
 		});
 
 		// Check user remains valid after
-		const dbUserAfter = await prisma.user.findUnique({
+		const dbAccountAfter = await prisma.account.findUnique({
 			where: {
-				id: userId,
+				id: accountId,
 			},
 			include: {
-				profile: true,
+				user: true,
 				reservation: true,
 			},
 		});
@@ -252,7 +231,7 @@ describe('Reservation routes', () => {
 		expect(dbInvoiceAfter).toBeNull;
 
 		// Expect user to exist after deletion
-		expect(dbUserAfter).not.toBeNull;
+		expect(dbAccountAfter).not.toBeNull;
 
 		// Expect vehicle to exist after deletion
 		expect(dbVehcileAfter).not.toBeNull;

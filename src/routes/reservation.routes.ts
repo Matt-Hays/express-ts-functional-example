@@ -13,9 +13,9 @@ const reservationRoute = Router();
  * all (1) of its invoices and all (1) of its policies (insurance)
  */
 
-// ********************
-// POST a Reservation *
-// ********************//
+// *****************************
+// CREATE / POST a Reservation *
+// *****************************
 reservationRoute.post('/', async (req: Request, res: Response): Promise<void> => {
 	const pickup = req.body.startDate;
 	const dropoff = req.body.endDate;
@@ -31,6 +31,15 @@ reservationRoute.post('/', async (req: Request, res: Response): Promise<void> =>
 	const subtotal = parseFloat(dmgFee) + parseFloat(fuelFee) + parseFloat(adminFee) + parseFloat(stdRate);
 	const taxRate = req.body.invoice?.taxRate || 0.0115;
 	const total = subtotal * (1 + parseFloat(taxRate));
+
+	const type = req.body.account?.type;
+	const fName = req.body.account?.firstName;
+	const lName = req.body.account?.lastName;
+	const address1 = req.body.account?.addressLine1;
+	const address2 = req.body.account?.addressLine2;
+	const city = req.body.account?.city;
+	const state = req.body.account?.state;
+	const zip = req.body.account?.zip;
 	try {
 		let newReservation: Reservation & { insurance?: Insurance | null; vehicle?: Vehicle; invoice?: Invoice | null };
 
@@ -39,9 +48,9 @@ reservationRoute.post('/', async (req: Request, res: Response): Promise<void> =>
 				data: {
 					startDate: pickup != null ? pickup : undefined,
 					endDate: dropoff != null ? dropoff : undefined,
-					user: {
+					account: {
 						connect: {
-							id: req.body.user.id != null ? req.body.user.id : undefined,
+							id: req.body.account.id,
 						},
 					},
 					invoice: {
@@ -66,7 +75,7 @@ reservationRoute.post('/', async (req: Request, res: Response): Promise<void> =>
 					},
 					vehicle: {
 						connect: {
-							id: req.body.vehicle.id != null ? req.body.vehicle.id : undefined,
+							id: req.body.vehicle?.id != null ? req.body.vehicle.id : undefined,
 						},
 					},
 				},
@@ -74,7 +83,7 @@ reservationRoute.post('/', async (req: Request, res: Response): Promise<void> =>
 					insurance: true,
 					vehicle: true,
 					invoice: true,
-					user: true,
+					account: true,
 				},
 			});
 		} else {
@@ -82,9 +91,9 @@ reservationRoute.post('/', async (req: Request, res: Response): Promise<void> =>
 				data: {
 					startDate: req.body.startDate != null ? req.body.startDate : undefined,
 					endDate: req.body.endDate != null ? req.body.endDate : undefined,
-					user: {
+					account: {
 						connect: {
-							id: req.body.user.id != null ? req.body.user.id : undefined,
+							id: req.body.account.id,
 						},
 					},
 					invoice: {
@@ -101,7 +110,7 @@ reservationRoute.post('/', async (req: Request, res: Response): Promise<void> =>
 					},
 					vehicle: {
 						connect: {
-							id: req.body.vehicle.id != null ? req.body.vehicle.id : undefined,
+							id: req.body.vehicle?.id != null ? req.body.vehicle.id : undefined,
 						},
 					},
 				},
@@ -109,7 +118,7 @@ reservationRoute.post('/', async (req: Request, res: Response): Promise<void> =>
 					insurance: true,
 					vehicle: true,
 					invoice: true,
-					user: true,
+					account: true,
 				},
 			});
 		}
@@ -220,7 +229,7 @@ reservationRoute.put('/:id', async (req: Request, res: Response): Promise<void> 
 			include: {
 				insurance: true,
 				invoice: true,
-				user: true,
+				account: true,
 				vehicle: true,
 			},
 		});
