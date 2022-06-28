@@ -4,6 +4,11 @@ import prisma from '../../lib/prisma';
 
 const userRoute = Router();
 
+// User type w/o password
+type Partial<User> = {
+	[password in keyof User]?: User[password];
+};
+
 // ***************
 // POST new User *
 // ***************
@@ -41,10 +46,6 @@ userRoute.post('/', async (req: Request, res: Response): Promise<void> => {
 // ***************
 // GET all Users *
 // ***************
-// Specify a type without a password
-type Partial<User> = {
-	[password in keyof User]?: User[password];
-};
 
 userRoute.get('/', async (req: Request, res: Response): Promise<void> => {
 	try {

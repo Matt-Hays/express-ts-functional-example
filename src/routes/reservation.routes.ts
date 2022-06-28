@@ -41,7 +41,11 @@ reservationRoute.post('/', async (req: Request, res: Response): Promise<void> =>
 	const state = req.body.account?.state;
 	const zip = req.body.account?.zip;
 	try {
-		let newReservation: Reservation & { insurance?: Insurance | null; vehicle?: Vehicle; invoice?: Invoice | null };
+		let newReservation: Reservation & {
+			insurance?: Insurance | null;
+			vehicle?: Vehicle | null;
+			invoice?: Invoice | null;
+		};
 
 		if (validStart != null && validEnd != null && provider != null) {
 			newReservation = await prisma.reservation.create({
