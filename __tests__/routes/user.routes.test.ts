@@ -1,19 +1,34 @@
 import request from 'supertest';
+import { User } from '@prisma/client';
 
 import app from '../../src/app';
 import prisma from '../../lib/prisma';
 
 describe('User routes', () => {
-	const userId = 'f9830b33-eab5-4b47-9be1-012c98d6028e';
+	let userId: string;
+
+	beforeAll(async () => {
+		const randUser = await prisma.user.findMany();
+		userId = randUser[0].id;
+	});
 
 	// ***************
 	// Create a User *
 	// ***************
 	test('Create a new user', async () => {
+		const randNum = Math.random() * 10000 + 1;
 		const testUser = {
-			email: 'test7@test.com',
+			email: `test${randNum}@test.com`,
 			password: 'plaintexttest',
-			type: 'GUEST',
+			account: {
+				type: 'CUSTOMER',
+				firstName: 'Sam',
+				lastName: 'OneEye',
+				addressLine1: '245 secondary ave',
+				city: 'Denton',
+				state: 'MI',
+				zip: '98745',
+			},
 		};
 
 		// Send a POST request through the application.
@@ -25,6 +40,9 @@ describe('User routes', () => {
 			where: {
 				email: testUser.email,
 			},
+			include: {
+				account: true,
+			},
 		});
 		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
 
@@ -34,12 +52,12 @@ describe('User routes', () => {
 		// Expect the app response to equal the original data
 		expect(appResponse.body.email).toEqual(testUser.email);
 		expect(appResponse.body.password).toEqual(testUser.password);
-		expect(appResponse.body.type).toEqual(testUser.type);
+		expect(appResponse.body.account.type).toEqual(testUser.account.type);
 
 		// Expect the db response to equal the original data
 		expect(dbResponseJson.email).toEqual(testUser.email);
 		expect(dbResponseJson.password).toEqual(testUser.password);
-		expect(dbResponseJson.type).toEqual(testUser.type);
+		expect(dbResponseJson.account.type).toEqual(testUser.account.type);
 
 		// Expect the response from the app to match the response from the db
 		expect(appResponse.body).toEqual(dbResponseJson);
@@ -48,18 +66,23 @@ describe('User routes', () => {
 	// ****************
 	// Read All Users *
 	// ****************
+	type Partial<User> = {
+		[password in keyof User]?: User[password];
+	};
 	test('Read all users', async () => {
 		// Get the response from the app
 		const appResponse = await request(app).get('/api/user');
 
 		// Get the response from the database
-		const dbResponse = await prisma.user.findMany();
+		const dbResponse: Partial<User>[] = await prisma.user.findMany();
+		dbResponse.forEach((user) => delete user.password);
 		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
 
 		// Expect a valid success code
 		expect(appResponse.statusCode).toEqual(200);
 
 		// Expect the result from the application matches the result from the database.
+		// Expect the passwords to be removed from the response
 		expect(appResponse.body).toEqual(dbResponseJson);
 	});
 
@@ -93,18 +116,20 @@ describe('User routes', () => {
 	// Update a User *
 	// ***************
 	test('Update user by id', async () => {
-		const modifiedPw = 'newplaintexttestpassword';
+		const mod = {
+			password: 'newplaintexttestpassword',
+		};
 
 		// Send the PUT request through the application
-		const appResponse = await request(app)
-			.put(`/api/user/${userId}`)
-			.set('Content-Type', 'application/json')
-			.send({ password: modifiedPw });
+		const appResponse = await request(app).put(`/api/user/${userId}`).set('Content-Type', 'application/json').send(mod);
 
 		// Get the db record after the modification
 		const dbResponse = await prisma.user.findUnique({
 			where: {
 				id: userId,
+			},
+			include: {
+				account: true,
 			},
 		});
 		const dbResponseJson = JSON.parse(
@@ -123,36 +148,5 @@ describe('User routes', () => {
 	// ***************
 	// DELETE a User *
 	// ***************
-	test('Delete user by id', async () => {
-		// Get the db record before deletion
-		const dbResponseBefore = await prisma.user.findUnique({
-			where: {
-				id: userId,
-			},
-		});
-		const dbResponseBeforeJson = JSON.parse(
-			JSON.stringify(dbResponseBefore, (key: string, value: any): any =>
-				typeof value == 'bigint' ? value.toString() : value
-			)
-		);
-
-		// Send the DELETE request through the application
-		const appResponse = await request(app).del(`/api/user/${userId}`);
-
-		// Get the db record after the deletion
-		const dbResponseAfter = await prisma.user.findUnique({
-			where: {
-				id: userId,
-			},
-		});
-
-		// Expect valid success code
-		expect(appResponse.statusCode).toEqual(200);
-
-		// Expect app response to equal database before deletion
-		expect(appResponse.body).toEqual(dbResponseBeforeJson);
-
-		// Expect db after deletion to contain no record
-		expect(dbResponseAfter).toEqual(null);
-	});
+	// Not implemented
 });

@@ -78,15 +78,36 @@ fleetRoute.put('/:id', async (req: Request, res: Response): Promise<void> => {
 // ******************
 // Delete a Vehicle *
 // ******************
+// We want to retain the vehicle record and associated transactions,
+// so we will update its active status to false and create a vehicle transfer record.
 fleetRoute.delete('/:id', async (req: Request, res: Response): Promise<void> => {
 	try {
-		const deletedVehicle = await prisma.vehicle.delete({
+		// Set the record to inanctive and update transfer reason
+		const inactivatedVehicle = await prisma.vehicle.update({
+			data: {
+				active: false,
+				transfer: {
+					upsert: {
+						update: {
+							beneficiary: req.body.beneficiary != null ? req.body.beneficiary : undefined,
+							category: req.body.category != null ? req.body.category : undefined,
+						},
+						create: {
+							beneficiary: req.body.beneficiary != null ? req.body.beneficiary : undefined,
+							category: req.body.category != null ? req.body.category : undefined,
+						},
+					},
+				},
+			},
 			where: {
-				id: req.params.id,
+				id: req.params.id != null ? req.params.id : undefined,
+			},
+			include: {
+				transfer: true,
 			},
 		});
 
-		res.status(200).json(deletedVehicle);
+		res.status(200).json(inactivatedVehicle);
 	} catch (error) {
 		res.status(500).send({ message: error });
 	}

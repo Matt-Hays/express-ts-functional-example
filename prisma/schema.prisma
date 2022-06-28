@@ -7,39 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// **************
-// Invoice Type *
-// **************
+// ***********
+// User Type *
+// ***********
+model User {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
 
-model Invoice {
-  id               String      @id @default(uuid())
-  createdAt        DateTime    @default(now())
-  reservation      Reservation @relation(fields: [reservationId], references: [id])
-  reservationId    String      @unique
-  damageFee        Decimal     @db.Decimal(6, 2)
-  fuelFee          Decimal     @db.Decimal(6, 2)
-  adminstrativeFee Decimal     @db.Decimal(6, 2)
-  standardRate     Decimal     @db.Decimal(6, 2)
-  subtotal         Decimal     @db.Decimal(7, 2)
-  taxRate          Decimal     @db.Decimal(6, 2)
-  total            Decimal     @db.Decimal(7, 2)
-  payment          Payment     @relation(fields: [paymentId], references: [id])
-  paymentId        String
+  // Relations
+  account   Account @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  accountId String  @unique
 }
 
-model Payment {
-  id        String    @id @default(uuid())
-  createdAt DateTime  @default(now())
-  Invoice   Invoice[]
-  method    Method
-  complete  Boolean
+// *************************
+// Account Type            *
+// User History Permanence *
+// (No Delete /            *
+// Allows User Deletion)   *
+// *************************
+model Account {
+  id           String  @id @default(uuid())
+  type         Role    @default(CUSTOMER)
+  firstName    String
+  lastName     String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String  @db.VarChar(2)
+  zip          String  @db.VarChar(10)
+
+  // Relations
+  user        User?
+  reservation Reservation[]
 }
 
-enum Method {
-  CREDIT_CARD
-  CASH
-  CHECK
-  CORPORATE_ACCOUNT
+enum Role {
+  CUSTOMER
+  CLERK
+  MANAGER
+  ADMIN
 }
 
 // ******************
@@ -47,29 +54,19 @@ enum Method {
 // ******************
 
 model Reservation {
-  id        String    @id @default(uuid())
-  vehicle   Vehicle   @relation(fields: [vehicleId], references: [id])
-  vehicleId String    @unique
-  startDate DateTime  @default(now())
-  endDate   DateTime  @default(now())
-  policy    Policy?   @relation(fields: [policyId], references: [id])
-  policyId  String
-  Invoice   Invoice[]
-}
+  id        String   @id @default(uuid())
+  startDate DateTime @default(now())
+  endDate   DateTime @default(now())
 
-model Policy {
-  id          String        @id @default(uuid())
-  provider    Provider      @default(FARMERS)
-  validStart  DateTime      @default(now())
-  validEnd    DateTime      @default(now())
-  Reservation Reservation[]
-}
-
-enum Provider {
-  PACIFIC_LIFE
-  ALLSTATE
-  FARMERS
-  USAA
+  // Relations
+  account     Account    @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  accountId   String
+  vehicle     Vehicle    @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  vehicleId   String
+  insurance   Insurance? @relation(fields: [insuranceId], references: [id], onDelete: Cascade)
+  insuranceId String?    @unique
+  invoice     Invoice?   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId   String?    @unique
 }
 
 // **************
@@ -77,49 +74,99 @@ enum Provider {
 // **************
 
 model Vehicle {
-  id          String        @id @default(uuid())
-  make        String
-  model       String
-  mileage     Int
-  year        DateTime
-  Reservation Reservation[]
+  id      String   @id @default(uuid())
+  make    String
+  model   String
+  mileage Int
+  year    DateTime
+  active  Boolean  @default(true)
+
+  // Relations
+  reservations Reservation[]
+  transfer     Transfer?
 }
 
-// ***********
-// User Type *
-// ***********
+model Transfer {
+  id          String            @id @default(uuid())
+  category    TransferCategory?
+  beneficiary String
+  createdOn   DateTime          @default(now())
+  modifiedOn  DateTime          @updatedAt
 
-model User {
-  id       String   @id @default(uuid())
-  email    String   @unique
-  password String
-  type     Role     @default(GUEST)
-  Profile  Profile?
+  // Relations
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  vehicleId String  @unique
 }
 
-enum Role {
-  GUEST
-  CLERK
-  MANAGER
-  ADMIN
+enum TransferCategory {
+  DAMAGE
+  SAFETY
+  MAINTENANCE
 }
 
-model Profile {
-  id        String  @id @default(uuid())
-  firstName String
-  lastName  String
-  address   Address @relation(fields: [addressId], references: [id])
-  addressId String
-  User      User    @relation(fields: [userId], references: [id])
-  userId    String  @unique
+// ***********************
+// Insurance Policy Type *
+// ***********************
+model Insurance {
+  id         String    @id @default(uuid())
+  provider   Provider?
+  selected   Boolean   @default(false)
+  validStart DateTime?
+  validEnd   DateTime?
+
+  // Relations
+  reservation Reservation?
 }
 
-model Address {
-  id      String    @id @default(uuid())
-  line1   String
-  line2   String
-  city    String
-  state   String    @db.VarChar(2)
-  zip     String    @db.VarChar(10)
-  Profile Profile[]
+enum Provider {
+  USAA
+  PROGRESSIVE
+  FARMERS
+  ALLSTATE
+  GEICO
+  STATEFARM
+  NATIONWIDE
+  SHELTER
+  AIG
+}
+
+// **************
+// Invoice Type *
+// **************
+
+model Invoice {
+  id                String   @id @default(uuid())
+  createdAt         DateTime @default(now())
+  damageFee         Decimal? @db.Decimal(6, 2)
+  fuelFee           Decimal? @db.Decimal(6, 2)
+  administrativeFee Decimal? @db.Decimal(6, 2)
+  standardRate      Decimal? @db.Decimal(6, 2)
+  subtotal          Decimal? @db.Decimal(7, 2)
+  taxRate           Decimal? @db.Decimal(6, 2)
+  total             Decimal? @db.Decimal(7, 2)
+
+  // Relations
+  reservation Reservation?
+  payment     Payment?
+}
+
+// **************
+// Payment Type *
+// **************
+model Payment {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  method    Method
+  complete  Boolean
+
+  // Relations
+  invoice   Invoice @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  paymentId String  @unique
+}
+
+enum Method {
+  CREDIT_CARD
+  CASH
+  CHECK
+  CORPORATE_ACCOUNT
 }
