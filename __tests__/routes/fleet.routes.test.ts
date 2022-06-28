@@ -147,41 +147,33 @@ describe('Fleet routes', () => {
 	// Delete One Vehicle *
 	// ********************
 	test('Delete a vehicle by id', async () => {
-		// Create Vehicle Transfer test record.
-		const transferTestRecord = {
-			category: 'SAFETY',
-			beneficiary: 'Enterprise',
-		};
+		// Get db response before deletion
+		const dbBefore = await prisma.vehicle.findUnique({
+			where: {
+				id: vehicleId,
+			},
+		});
+		const dbBeforeJson = JSON.parse(
+			JSON.stringify(dbBefore, (key: string, value: any): any => (typeof value === 'bigint' ? value.toString() : value))
+		);
 
 		// Send DELETE request through the application.
-		const appResponse = await request(app)
-			.del(`/api/fleet/${vehicleId}`)
-			.set('Content-Type', 'application/json')
-			.send(transferTestRecord);
+		const appResponse = await request(app).del(`/api/fleet/${vehicleId}`);
 
 		// Get the db record after deletetion
 		const dbResponse = await prisma.vehicle.findUnique({
 			where: {
 				id: vehicleId,
 			},
-			include: {
-				transfer: true,
-			},
 		});
-		const dbResponseJson = JSON.parse(JSON.stringify(dbResponse));
 
 		// Expect that a valid success code has been received
 		expect(appResponse.statusCode).toEqual(200);
 
 		// Expect the active state of the vehicle record has been set to false
-		expect(dbResponse?.active).toBe(false);
+		expect(dbResponse).toBeNull;
 
-		// Expect a vehicle transfer record to have been created
-		expect(dbResponse?.transfer?.id).not.toBeNull;
-		expect(dbResponse?.transfer?.beneficiary).not.toBeNull;
-		expect(dbResponse?.transfer?.createdOn).not.toBeNull;
-
-		// Expect the app and the db to agree
-		expect(appResponse.body).toEqual(dbResponseJson);
+		// Expect the app and the before db to agree
+		expect(appResponse.body).toEqual(dbBeforeJson);
 	});
 });

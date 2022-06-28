@@ -112,6 +112,19 @@ userRoute.put('/:id', async (req: Request, res: Response): Promise<void> => {
 // ***************
 // DELETE a User *
 // ***************
-// Don't allow deletion of a user
+userRoute.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+	try {
+		// Delete user
+		const deletedUser = await prisma.user.delete({
+			where: {
+				id: req.params.id,
+			},
+		});
+
+		res.status(200).json(deletedUser);
+	} catch (error) {
+		res.status(500).send({ message: error });
+	}
+});
 
 export { userRoute };

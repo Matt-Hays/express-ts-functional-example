@@ -61,8 +61,8 @@ model Reservation {
   // Relations
   account     Account    @relation(fields: [accountId], references: [id], onDelete: SetNull)
   accountId   String
-  vehicle     Vehicle    @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
-  vehicleId   String
+  vehicle     Vehicle?   @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  vehicleId   String?
   insurance   Insurance? @relation(fields: [insuranceId], references: [id], onDelete: Cascade)
   insuranceId String?    @unique
   invoice     Invoice?   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
@@ -83,25 +83,6 @@ model Vehicle {
 
   // Relations
   reservations Reservation[]
-  transfer     Transfer?
-}
-
-model Transfer {
-  id          String            @id @default(uuid())
-  category    TransferCategory?
-  beneficiary String
-  createdOn   DateTime          @default(now())
-  modifiedOn  DateTime          @updatedAt
-
-  // Relations
-  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
-  vehicleId String  @unique
-}
-
-enum TransferCategory {
-  DAMAGE
-  SAFETY
-  MAINTENANCE
 }
 
 // ***********************

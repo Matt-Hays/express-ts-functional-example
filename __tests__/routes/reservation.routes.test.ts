@@ -203,7 +203,6 @@ describe('Reservation routes', () => {
 			},
 			include: {
 				reservations: true,
-				transfer: true,
 			},
 		});
 
